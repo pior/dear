@@ -57,7 +57,10 @@ func TestEncrypters(t *testing.T) {
 func benchDecryption(encryptor Encryptor, ciphertext []byte) func(b *testing.B) {
 	return func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
-			_, _ = encryptor.Decrypt(ciphertext)
+			_, err := encryptor.Decrypt(ciphertext)
+			if err != nil {
+				panic(err.Error())
+			}
 		}
 	}
 }
@@ -78,5 +81,28 @@ func BenchmarkDecryption(b *testing.B) {
 		ciphertext, err = aes.Encrypt(message)
 		require.NoError(b, err)
 		b.Run(fmt.Sprintf("aesgcm-%dbytes", messageSize), benchDecryption(aes, ciphertext))
+	}
+}
+
+func benchEncryption(encryptor Encryptor, plaintext []byte) func(b *testing.B) {
+	return func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_, err := encryptor.Encrypt(plaintext)
+			if err != nil {
+				panic(err.Error())
+			}
+		}
+	}
+}
+func BenchmarkEncryption(b *testing.B) {
+	key := makeKey()
+	messageSizes := []int{32, 512, 8192}
+	box := &SecretBox{key: key}
+	aes := &AESGCM{key: key}
+
+	for _, messageSize := range messageSizes {
+		message := makeMessage(messageSize)
+		b.Run(fmt.Sprintf("secretbox-%dbytes", messageSize), benchEncryption(box, message))
+		b.Run(fmt.Sprintf("aesgcm-%dbytes", messageSize), benchEncryption(aes, message))
 	}
 }
