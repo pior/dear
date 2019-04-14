@@ -1,0 +1,4 @@
+up:
+  - go:
+      version: '1.12.4'
+      modules: true
