@@ -1,18 +1,18 @@
-package dear
+package crypto
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"io"
+
+	"github.com/pior/dear/key"
 )
 
-type AESGCM struct {
-	key [32]byte
-}
+type AESGCM struct{}
 
-func (a *AESGCM) Encrypt(plaintext []byte) ([]byte, error) {
-	block, err := aes.NewCipher(a.key[:])
+func (a *AESGCM) Encrypt(key *key.Key, plaintext []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return nil, err
 	}
@@ -31,12 +31,12 @@ func (a *AESGCM) Encrypt(plaintext []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-func (a *AESGCM) Decrypt(ciphertext []byte) ([]byte, error) {
+func (a *AESGCM) Decrypt(key *key.Key, ciphertext []byte) ([]byte, error) {
 	var nonce [12]byte
 	copy(nonce[:], ciphertext[:12])
 	ciphertext = ciphertext[12:]
 
-	block, err := aes.NewCipher(a.key[:])
+	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return nil, err
 	}
